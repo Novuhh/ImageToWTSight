@@ -1,38 +1,103 @@
-.App {
-  text-align: center;
+p {
+    margin-top: 0;
+    margin-bottom: 0;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+img {
+    height: 100%;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.Page {
+    background-color: #2B2A33;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.Page-content {
+    color: white;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin: 0, 0 0 0;
 }
 
-.App-link {
-  color: #61dafb;
+.Header-title {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.Preview-window {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    height: 480px;
+    padding-left: 16px;
+    padding-right: 16px;
+}
+
+.Step-container {
+    display: flex;
+    padding: 10px;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.Input-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 10px;
+    align-self: stretch;
+    height: 480px;
+}
+
+.Input-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.Overlay-container {
+    display: flex;
+    gap: 2em;
+    width: 100%;
+}
+
+.Overlay-image {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 10px;
+    align-self: stretch;
+    margin-left: 3em;
+    width: 100%;
+    height: auto;
+}
+
+.Overlay-controls {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-right: 3em;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+
+.Overlay-control-group {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.Overlay-control {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
