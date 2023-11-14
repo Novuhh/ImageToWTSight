@@ -63,7 +63,7 @@ function App()
             // console.log("scaled input", scaled)
             SetCombinedLines(scaled);
             SetTransformedLines(scaled)
-            SetAppliedSVG(backend.LinesAndBeziersToSVG(scaled, 1780, 1000));
+            SetAppliedSVG(backend.LinesAndBeziersToSVG(scaled, 1777, 1000));
         });
     }
 
@@ -107,8 +107,7 @@ function App()
     {
         const newLines = backend.ApplyLinesTranformation(inputLines.length !== 0 ? inputLines : combinedLines, {xOffset: xPos, yOffset: yPos, xScale: xScale, yScale: yScale, rotation: rotation});
         SetTransformedLines(newLines);
-        console.log(newLines)
-        SetAppliedSVG(backend.LinesAndBeziersToSVG(newLines, 1780, 1000));
+        SetAppliedSVG(backend.LinesAndBeziersToSVG(newLines, 1777, 1000));
     }
 
     function SightFile()
@@ -160,7 +159,8 @@ function App()
 
                 <h3 style={{color: "red", display: lines.length + beziers.length > warThunderMaxLines == "" ? "none" : "block"}}>Your image is too complex for War Thunder. War thunder has a max line limit of {warThunderMaxLines} for user sights.</h3>
 
-                <p style={{width: "60%", display: userImageBuffer == "" ? "none" : "block"}}>Your image has {lines.length} lines and {beziers.length} curves. Curves will be broken down into n number of segments. War Thunder has a max of {warThunderMaxLines} lines per user sight.</p>
+                <p style={{display: userImageBuffer == "" ? "none" : "block"}}>Your image has {lines.length} lines and {beziers.length} curves. Curves will be broken down into n number of segments.</p>
+                <p>War Thunder has a limit of {warThunderMaxLines} lines per user sight.</p>
 
                 <div className="Input-container" style={{height: "fit-content", display: userImageBuffer == "" ? "none" : "flex"}}>
                     <div className="Input-side" style={{width: Math.ceil(windowWidth.current * 0.4), maxWidth: Math.ceil(windowWidth.current * 0.4)}}>
@@ -182,12 +182,12 @@ function App()
             <div className="Step-container" style={{width: "100%", display: userImagePotrace == "" ? "none" : "flex"}}>
                 <h1>Step 2: Place the image on the sight</h1>
 
-                <p>*Not exactly the sight in game, but close enough</p>
+                <p>*Preview, not actual in game sight. How it will be displayed on a 16:9 display.</p>
 
                 <div className="Overlay-container">
                     <div className="Overlay-image" id="image-overlay">
-                        <img width="100%" id="displayImage" alt="default sight" src={gameSight}/>
-                        <div style={{position: "absolute", width: "100%"}} dangerouslySetInnerHTML={{__html: appliedSVG}}/>
+                        <img width="100%" id="displayImage" alt="default sight" src={gameSight} style={{height: "fit-content"}}/>
+                        <div style={{position: "absolute", width: "100%", top: "0.01px"}} dangerouslySetInnerHTML={{__html: appliedSVG}}/>
                     </div>
 
                     <div className="Overlay-controls">
@@ -206,9 +206,11 @@ function App()
                                 <input style={{width: "69px"}} type="number" id="n-segments-field" placeholder={maxLineSegments} value={nSegments === maxLineSegments ? "" : Math.min(nSegments, maxLineSegments)} name="n-segments" min="1" max={maxLineSegments} step="1" onChange={(e) => {isNaN(e.target.valueAsNumber) ? SetNSegments(maxLineSegments) : SetNSegments(e.target.valueAsNumber)}}/>
                             </div>
 
-                            <input type="button" id="process-curves" name="Generate" value="Apply" onClick={() => {ApplyLineBreakdown()}}/>
+                            <div style={{paddingRight: "12px"}}>
+                                <input type="button" id="process-curves" name="Generate" value="Apply" onClick={() => {ApplyLineBreakdown()}}/>
+                            </div>
+                            
                             <p>Total lines: {combinedLines.length} / {warThunderMaxLines}</p>
-
                         </div>
                         
                         <div className="Overlay-control-group">
@@ -243,10 +245,17 @@ function App()
                                 <input style={{width: "69px"}} type="number" id="rotation-field" placeholder="0" value={rotation === 0 ? "" : rotation} name="Rotation" min="0" max="360" step="1" onChange={(e) => {isNaN(e.target.valueAsNumber) ? SetRotation(0) : SetRotation(e.target.valueAsNumber)}}/>
                             </div>
 
-                            <input type="button" id="manipulate-apply" name="Generate" value="Apply" onClick={() => {ApplyTransformation()}}/>
+                            <div className="Button-holder">
+                                <input type="button" id="reset-manipulate" name="Reset" value="Reset" onClick={() => {
+                                    SetXPos(0);
+                                    SetYPos(0);
+                                    SetXScale(1);
+                                    SetYScale(1);
+                                    SetRotation(0);
+                                }}/>
+                                <input type="button" id="manipulate-apply" name="Generate" value="Apply" onClick={() => {ApplyTransformation()}}/>
+                            </div>
                         </div>
-
-                        
                     </div>
                 </div>
             </div>
@@ -257,12 +266,16 @@ function App()
                 
                 <a download={`${fileName}_ItWTUS.blk`} href={URL.createObjectURL(SightFile())}><button>Download</button></a>
 
-                <p>Place the blk file in into War Thunder. Directory: "War Thunder/UserSights/all_tanks/&#60;your_sight&#62;.blk"</p>
+                <p>Place the blk file in into War Thunder. Directory Path: "War Thunder/UserSights/all_tanks/&#60;your_sight&#62;_ItWTUS.blk"</p>
 
-                <p>If these folders to not exist, create them and name them as above.</p>
+                <p>If these folders to not exist, create them and name them exactly as above.</p>
+
+                <p>Equip the sight on your vehicle: Options -&#62; Common Battle Settings -&#62; Use Alternative Grid Sight -&#62; "&#60;your_sight&#62;_ItWTUS"</p>
+
+                <p>&nbsp;</p>
 
                 <p>Tip: If your sight is not appearing in game use the control, "Reload custom sight" with Alt + F9 by default.</p>
-                <p>Tip: Still won't show up in the list? &#60;your_sight&#62;(1).blk is not read, rename the file to get rid of parenthesis</p>
+                <p>Tip: Still won't show up in the list? &#60;your_sight&#62;326178(1)_ItWTUS.blk is not valid for WT, rename the file to get rid of anything execpt for letters and underscores. Ex: example_sight_ItWTUS.blk</p>
             </div>
         </div>
     </>)

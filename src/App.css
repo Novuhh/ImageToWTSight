@@ -71,7 +71,7 @@ img {
     position: relative;
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center;
     gap: 10px;
     align-self: stretch;
     margin-left: 3em;
@@ -100,4 +100,14 @@ img {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.Button-holder {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+    align-self: stretch;
+    padding-left: 12px;
+    padding-right: 12px;
 }
