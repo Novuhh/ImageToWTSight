@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/ImageToWTSight/static/css/main.5f752b74.css",
-    "main.js": "/ImageToWTSight/static/js/main.5968ed72.js",
+    "main.js": "/ImageToWTSight/static/js/main.76b23361.js",
     "static/js/787.5e8436c4.chunk.js": "/ImageToWTSight/static/js/787.5e8436c4.chunk.js",
     "static/media/vaporeonInGame.jpg": "/ImageToWTSight/static/media/vaporeonInGame.4887228d84655360f2a5.jpg",
     "static/media/vaporeonInput.png": "/ImageToWTSight/static/media/vaporeonInput.353a5601da10e35d973b.png",
@@ -9,11 +9,11 @@
     "static/media/vaporeonBlackAndWhite.png": "/ImageToWTSight/static/media/vaporeonBlackAndWhite.72561942ab64031fdf19.png",
     "index.html": "/ImageToWTSight/index.html",
     "main.5f752b74.css.map": "/ImageToWTSight/static/css/main.5f752b74.css.map",
-    "main.5968ed72.js.map": "/ImageToWTSight/static/js/main.5968ed72.js.map",
+    "main.76b23361.js.map": "/ImageToWTSight/static/js/main.76b23361.js.map",
     "787.5e8436c4.chunk.js.map": "/ImageToWTSight/static/js/787.5e8436c4.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.5f752b74.css",
-    "static/js/main.5968ed72.js"
+    "static/js/main.76b23361.js"
   ]
 }
