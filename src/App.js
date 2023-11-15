@@ -7,12 +7,15 @@ import { useState, useRef } from 'react';
 import { trace } from 'potrace';
 const backend = require('./linesAndCurves.js');
 
+
+// War thunder has a max number of lines it will display on a sight, exact number unknown but around 26XX, set to 2500 for safety
 const warThunderMaxLines = 2500;
+
 
 function App()
 {
     const windowWidth = useRef(window.innerWidth);
-    // const windowHeight = useRef(window.innerHeight);
+    const scollToImages = useRef();
 
     // Images to display to user
     const [userImageBuffer, SetUserImageBuffer] = useState("");
@@ -38,32 +41,42 @@ function App()
     const [yScale, SetYScale] = useState(1);
     const [rotation, SetRotation] = useState(0);
 
-
     /**
      * Take a new image from the user
      * @param {*} e - Action of input file change
      */
     async function UserSubmitsImage(e)
     {
+        // Save the image, buffer and file name
+        // Buffer for potrace and to display on page
+        // Name for downloading the sight.blk
         const buffer = await e.target.files[0].arrayBuffer();
         SetFileName(e.target.files[0].name.split('.')[0]);
         SetUserImageBuffer(buffer);
+
+        // Use potrace edge detection to get edges into an svg format
         trace(buffer, (err, svg) => 
         {
             if (err) throw err;
             SetUserImagePotrace(svg);
 
+            // Extract lines and bezier curves from the svg result
             const [lines, beziers] = backend.SVGToLinesAndBeziers(svg);
             SetLines(lines);
             SetBeziers(beziers);
+
+            // Set parameters to display the lines to the user
             SetMaxLines(warThunderMaxLines);
             const seg = ((lines.length + beziers.length) == 0) ? 1 : Math.ceil((warThunderMaxLines - lines.length) / beziers.length);
             SetNSegments(seg);
+
+            // Scale and position the lines to fill the sight
             const scaled = backend.ScaleAndCenterLinesToWarThunderSight(lines.concat(backend.BezierCurvesToLines(beziers, {maxLines: warThunderMaxLines - lines.length, maxSegments: seg})));
-            // console.log("scaled input", scaled)
             SetCombinedLines(scaled);
-            SetTransformedLines(scaled)
+            SetTransformedLines(scaled);
             SetAppliedSVG(backend.LinesAndBeziersToSVG(scaled, 1777, 1000));
+
+            scollToImages.current.scrollIntoView();
         });
     }
 
@@ -80,6 +93,7 @@ function App()
             return;
         }
 
+        // Get the max size the image should be and how big the image acutally is
         const maxSize = Math.ceil(windowWidth.current * 0.4);
         const widthStart = svg.indexOf("width=") + 7;
         const width = parseInt(svg.substring(widthStart, svg.indexOf('"', widthStart)));
@@ -96,6 +110,10 @@ function App()
         return svg.substring(0, svg.indexOf("width")) + (width > height ? `width="${maxSize}"` : `height="${maxSize}"`) + svg.substring(svg.indexOf('"', heightStart) + 1);
     }
 
+    /**
+     * Break down the curves into lines of user specified segments + lines
+     * Move the lines to the position given by the user
+     */
     function ApplyLineBreakdown()
     {
         const scaled = backend.ScaleAndCenterLinesToWarThunderSight(lines.concat(backend.BezierCurvesToLines(beziers, {maxLines: maxLines - lines.length, maxSegments: nSegments})));
@@ -103,6 +121,10 @@ function App()
         ApplyTransformation(scaled);
     }
 
+    /**
+     * Move, scale, and rotate the lines by values from user
+     * @param {Number[]} inputLines [combinedLines] - The lines to manipulate
+     */
     function ApplyTransformation(inputLines = [])
     {
         const newLines = backend.ApplyLinesTranformation(inputLines.length !== 0 ? inputLines : combinedLines, {xOffset: xPos, yOffset: yPos, xScale: xScale, yScale: yScale, rotation: rotation});
@@ -110,6 +132,10 @@ function App()
         SetAppliedSVG(backend.LinesAndBeziersToSVG(newLines, 1777, 1000));
     }
 
+    /**
+     * Download the sight to be put into WT
+     * @returns Blob - File containing the text for the blk download
+     */
     function SightFile()
     {
         return new Blob([backend.GetSightBLKContent(transformedLines)], {type: 'text/plain'});
@@ -157,12 +183,12 @@ function App()
 
                 <input type="file" id="inputImage" name="image" accept="image/png, image/jpeg" onChange={(e) => UserSubmitsImage(e)}/>
 
-                <h3 style={{color: "red", display: lines.length + beziers.length > warThunderMaxLines == "" ? "none" : "block"}}>Your image is too complex for War Thunder. War thunder has a max line limit of {warThunderMaxLines} for user sights.</h3>
+                <h3 style={{color: "red", display: lines.length + beziers.length > warThunderMaxLines == "" ? "none" : "block"}}>Your image is too complex for War Thunder. War Thunder has a max line limit of {warThunderMaxLines} for user sights.</h3>
 
                 <p style={{display: userImageBuffer == "" ? "none" : "block"}}>Your image has {lines.length} lines and {beziers.length} curves. Curves will be broken down into n number of segments.</p>
                 <p>War Thunder has a limit of {warThunderMaxLines} lines per user sight.</p>
 
-                <div className="Input-container" style={{height: "fit-content", display: userImageBuffer == "" ? "none" : "flex"}}>
+                <div className="Input-container" style={{height: "fit-content", display: userImageBuffer == "" ? "none" : "flex"}} ref={scollToImages}>
                     <div className="Input-side" style={{width: Math.ceil(windowWidth.current * 0.4), maxWidth: Math.ceil(windowWidth.current * 0.4)}}>
                         <h3>Your Image Input</h3>
                         <div>
@@ -275,7 +301,8 @@ function App()
                 <p>&nbsp;</p>
 
                 <p>Tip: If your sight is not appearing in game use the control, "Reload custom sight" with Alt + F9 by default.</p>
-                <p>Tip: Still won't show up in the list? &#60;your_sight&#62;326178(1)_ItWTUS.blk is not valid for WT, rename the file to get rid of anything execpt for letters and underscores. Ex: example_sight_ItWTUS.blk</p>
+                
+                <p>Tip: Still won't show up in the list? &#60;your_sight&#62;326178_ItWTUS(1).blk is not valid for WT, rename the file to get rid of anything execpt for letters and underscores. Ex: example_sight_ItWTUS.blk</p>
             </div>
         </div>
     </>)

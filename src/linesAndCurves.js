@@ -241,6 +241,12 @@ function BezierCurvesToLines(bezierCurves, options = {})
         const curve = element["curve"];
         const segments = element["segments"];
 
+        // No need to break a curve down into 0 segments
+        if(segments == 0)
+        {
+            continue;
+        }
+
         // All curves start at x0, y0 when t = 0
         let [xPrev, yPrev] = [curve[0], curve[1]];
 
