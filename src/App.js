@@ -18,7 +18,7 @@ function App()
     const scollToImages = useRef();
 
     // Images to display to user
-    const [userImageBuffer, SetUserImageBuffer] = useState("");
+    const [userImage, SetUserImage] = useState("");
     const [userImagePotrace, SetUserImagePotrace] = useState("");
     const [appliedSVG, SetAppliedSVG] = useState("");
     const [fileName, SetFileName] = useState("");
@@ -47,37 +47,50 @@ function App()
      */
     async function UserSubmitsImage(e)
     {
-        // Save the image, buffer and file name
-        // Buffer for potrace and to display on page
-        // Name for downloading the sight.blk
-        const buffer = await e.target.files[0].arrayBuffer();
-        SetFileName(e.target.files[0].name.split('.')[0]);
-        SetUserImageBuffer(buffer);
-
-        // Use potrace edge detection to get edges into an svg format
-        trace(buffer, (err, svg) => 
+        const file = e.target.files[0];
+        if(!file)
         {
-            if (err) throw err;
-            SetUserImagePotrace(svg);
+            return;
+        }
 
-            // Extract lines and bezier curves from the svg result
-            const [lines, beziers] = backend.SVGToLinesAndBeziers(svg);
-            SetLines(lines);
-            SetBeziers(beziers);
+        try 
+        {
+            // Save the image, buffer and file name
+            // Buffer for potrace and to display on page
+            // Name for downloading the sight.blk
+            const buffer = await file.arrayBuffer();
+            SetFileName(file.name.split('.')[0]);
+            SetUserImage(URL.createObjectURL(file));
 
-            // Set parameters to display the lines to the user
-            SetMaxLines(warThunderMaxLines);
-            const seg = ((lines.length + beziers.length) == 0) ? 1 : Math.ceil((warThunderMaxLines - lines.length) / beziers.length);
-            SetNSegments(seg);
+            // Use potrace edge detection to get edges into an svg format
+            trace(buffer, (err, svg) => 
+            {
+                if (err) throw err;
+                SetUserImagePotrace(svg);
 
-            // Scale and position the lines to fill the sight
-            const scaled = backend.ScaleAndCenterLinesToWarThunderSight(lines.concat(backend.BezierCurvesToLines(beziers, {maxLines: warThunderMaxLines - lines.length, maxSegments: seg})));
-            SetCombinedLines(scaled);
-            SetTransformedLines(scaled);
-            SetAppliedSVG(backend.LinesAndBeziersToSVG(scaled, 1777, 1000));
+                // Extract lines and bezier curves from the svg result
+                const [lines, beziers] = backend.SVGToLinesAndBeziers(svg);
+                SetLines(lines);
+                SetBeziers(beziers);
 
-            scollToImages.current.scrollIntoView();
-        });
+                // Set parameters to display the lines to the user
+                SetMaxLines(warThunderMaxLines);
+                const seg = ((lines.length + beziers.length) == 0) ? 1 : Math.ceil((warThunderMaxLines - lines.length) / beziers.length);
+                SetNSegments(seg);
+
+                // Scale and position the lines to fill the sight
+                const scaled = backend.ScaleAndCenterLinesToWarThunderSight(lines.concat(backend.BezierCurvesToLines(beziers, {maxLines: warThunderMaxLines - lines.length, maxSegments: seg})));
+                SetCombinedLines(scaled);
+                SetTransformedLines(scaled);
+                SetAppliedSVG(backend.LinesAndBeziersToSVG(scaled, 1920, 1080));
+
+                scollToImages.current.scrollIntoView();
+            });
+        }
+        catch(err)
+        {
+            console.log(err);
+        }
     }
 
 
@@ -99,12 +112,6 @@ function App()
         const width = parseInt(svg.substring(widthStart, svg.indexOf('"', widthStart)));
         const heightStart = svg.indexOf("height=") + 8;
         const height = parseInt(svg.substring(heightStart, svg.indexOf('"', heightStart)));
-
-        // Image does not need to be scaled down
-        if(width <= maxSize && height <= maxSize)
-        {
-            return svg;
-        }
 
         // Cut out the existing width and height, limit to maxsize of bigger attribute
         return svg.substring(0, svg.indexOf("width")) + (width > height ? `width="${maxSize}"` : `height="${maxSize}"`) + svg.substring(svg.indexOf('"', heightStart) + 1);
@@ -129,7 +136,7 @@ function App()
     {
         const newLines = backend.ApplyLinesTranformation(inputLines.length !== 0 ? inputLines : combinedLines, {xOffset: xPos, yOffset: yPos, xScale: xScale, yScale: yScale, rotation: rotation});
         SetTransformedLines(newLines);
-        SetAppliedSVG(backend.LinesAndBeziersToSVG(newLines, 1777, 1000));
+        SetAppliedSVG(backend.LinesAndBeziersToSVG(newLines, 1920, 1080));
     }
 
     /**
@@ -185,15 +192,14 @@ function App()
 
                 <h3 style={{color: "red", display: lines.length + beziers.length > warThunderMaxLines == "" ? "none" : "block"}}>Your image is too complex for War Thunder. War Thunder has a max line limit of {warThunderMaxLines} for user sights.</h3>
 
-                <p style={{display: userImageBuffer == "" ? "none" : "block"}}>Your image has {lines.length} lines and {beziers.length} curves. Curves will be broken down into n number of segments.</p>
+                <p style={{display: userImage == "" ? "none" : "block"}}>Your image has {lines.length} lines and {beziers.length} curves. Curves will be broken down into n number of segments.</p>
                 <p>War Thunder has a limit of {warThunderMaxLines} lines per user sight.</p>
 
-                <div className="Input-container" style={{height: "fit-content", display: userImageBuffer == "" ? "none" : "flex"}} ref={scollToImages}>
+                <div className="Input-container" style={{height: "fit-content", display: userImage == "" ? "none" : "flex"}} ref={scollToImages}>
                     <div className="Input-side" style={{width: Math.ceil(windowWidth.current * 0.4), maxWidth: Math.ceil(windowWidth.current * 0.4)}}>
                         <h3>Your Image Input</h3>
-                        <div>
-                            <img style={{maxWidth: Math.ceil(windowWidth.current * 0.4), maxHeight: Math.ceil(windowWidth.current * 0.4)}} alt="display" id="displayImage" src={"data:image/png;base64," + btoa(String.fromCharCode.apply(null, new Uint8Array(userImageBuffer)))}/>
-                        </div>
+                        
+                        <img width="100%" alt="display" id="displayImage" src={userImage}/>
                     </div>
 
                     <div className="Input-side" style={{width: Math.ceil(windowWidth.current * 0.4), maxWidth: Math.ceil(windowWidth.current * 0.4)}}>
@@ -213,7 +219,7 @@ function App()
                 <div className="Overlay-container">
                     <div className="Overlay-image" id="image-overlay">
                         <img width="100%" id="displayImage" alt="default sight" src={gameSight} style={{height: "fit-content"}}/>
-                        <div style={{position: "absolute", width: "100%", top: "0.01px"}} dangerouslySetInnerHTML={{__html: appliedSVG}}/>
+                        <div className="SVG-overlay" dangerouslySetInnerHTML={{__html: appliedSVG}}/>
                     </div>
 
                     <div className="Overlay-controls">

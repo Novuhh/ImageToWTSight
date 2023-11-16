@@ -133,8 +133,6 @@ function ApplyLinesTranformation(lines = [], options = {xOffset: 0, yOffset: 1, 
         return [];
     }
 
-    console.log(options["xOffset"], options["yOffset"], options["xScale"], options["yScale"], options["rotation"]);
-
     if(options["xOffset"] != 0 || options["yOffset"] != 0)
     {
         lines = OffsetLines(lines, {xOffset: options["xOffset"], yOffset: options["yOffset"]})
