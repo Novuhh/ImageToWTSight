@@ -84,7 +84,7 @@ function App()
                 SetTransformedLines(scaled);
                 SetAppliedSVG(backend.LinesAndBeziersToSVG(scaled, 1920, 1080));
 
-                scollToImages.current.scrollIntoView();
+                scollToImages.current.scrollIntoView({behavior: "smooth"});
             });
         }
         catch(err)
@@ -114,7 +114,7 @@ function App()
         const height = parseInt(svg.substring(heightStart, svg.indexOf('"', heightStart)));
 
         // Cut out the existing width and height, limit to maxsize of bigger attribute
-        return svg.substring(0, svg.indexOf("width")) + (width > height ? `width="${maxSize}"` : `height="${maxSize}"`) + svg.substring(svg.indexOf('"', heightStart) + 1);
+        return svg.substring(0, svg.indexOf("width")) + (width > height ? `width="40vw"` : `height="40vw"`) + svg.substring(svg.indexOf('"', heightStart) + 1);
     }
 
     /**
@@ -196,16 +196,16 @@ function App()
                 <p>War Thunder has a limit of {warThunderMaxLines} lines per user sight.</p>
 
                 <div className="Input-container" style={{height: "fit-content", display: userImage == "" ? "none" : "flex"}} ref={scollToImages}>
-                    <div className="Input-side" style={{width: Math.ceil(windowWidth.current * 0.4), maxWidth: Math.ceil(windowWidth.current * 0.4)}}>
+                    <div className="Input-side">
                         <h3>Your Image Input</h3>
                         
-                        <img width="100%" alt="display" id="displayImage" src={userImage}/>
+                        <img style={{objectFit: "contain", width: "100%", maxHeight: "40vw"}} alt="display" id="displayImage" src={userImage}/>
                     </div>
 
-                    <div className="Input-side" style={{width: Math.ceil(windowWidth.current * 0.4), maxWidth: Math.ceil(windowWidth.current * 0.4)}}>
+                    <div className="Input-side">
                         <h3>Image I Extract</h3>
 
-                        <div dangerouslySetInnerHTML={{__html: DisplaySVG(userImagePotrace)}}/>
+                        <div style={{width: "100%"}} dangerouslySetInnerHTML={{__html: DisplaySVG(userImagePotrace)}}/>
                     </div>
                 </div>
             </div>
