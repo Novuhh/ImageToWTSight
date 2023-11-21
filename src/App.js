@@ -3,7 +3,7 @@ import vapOrginal from './assets/vaporeonInput.png';
 import vapInGame from './assets/vaporeonInGame.jpg';
 import vapOutline from './assets/vaporeonBlackAndWhite.png';
 import gameSight from './assets/gameSight.jpg';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { trace } from 'potrace';
 const backend = require('./linesAndCurves.js');
 
@@ -11,10 +11,13 @@ const backend = require('./linesAndCurves.js');
 // War thunder has a max number of lines it will display on a sight, exact number unknown but around 26XX, set to 2500 for safety
 const warThunderMaxLines = 2500;
 
+// How long after the user changes the sliders to make the change
+// Prevents needing to apply changes but also not applying 50 times in the span of 10ms
+const userInputDelayInMS = 250;
+
 
 function App()
 {
-    const windowWidth = useRef(window.innerWidth);
     const scollToImages = useRef();
 
     // Images to display to user
@@ -40,6 +43,21 @@ function App()
     const [xScale, SetXScale] = useState(1);
     const [yScale, SetYScale] = useState(1);
     const [rotation, SetRotation] = useState(0);
+
+    // Timeout for user changes
+    // https://stackoverflow.com/questions/57995978/why-is-cleartimeout-not-clearing-the-timeout-in-this-react-component
+    useEffect(() => 
+    {
+        const t = setTimeout(() => { ApplyLineBreakdown(); }, userInputDelayInMS);
+        return () => { clearTimeout(t); }
+    }, [maxLines, nSegments]);
+
+    useEffect(() => 
+    {
+        const t = setTimeout(() => { ApplyTransformation(); }, userInputDelayInMS);
+        return () => { clearTimeout(t); }
+    }, [xPos, yPos, xScale, yScale, rotation]);
+
 
     /**
      * Take a new image from the user
@@ -90,6 +108,7 @@ function App()
         catch(err)
         {
             console.log(err);
+            SetUserImagePotrace("An error occured with your image. Try converting from jpg to png or vice versa.");
         }
     }
 
@@ -106,8 +125,13 @@ function App()
             return;
         }
 
+        // Error message pass through
+        if(!svg.startsWith("<svg"))
+        {
+            return svg;
+        }
+
         // Get the max size the image should be and how big the image acutally is
-        const maxSize = Math.ceil(windowWidth.current * 0.4);
         const widthStart = svg.indexOf("width=") + 7;
         const width = parseInt(svg.substring(widthStart, svg.indexOf('"', widthStart)));
         const heightStart = svg.indexOf("height=") + 8;
@@ -158,13 +182,13 @@ function App()
             </div>
 
             <div className="Preview-window">
-                <img src={vapOrginal} alt="Orginal" style={{height: "100%"}}/>
+                <img src={vapOrginal} alt="Orginal" style={{height: "calc(40vw * 9 / 16)"}}/>
 
-                <svg width="200px" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M6 12H18M18 12L13 7M18 12L13 17" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <svg style={{width: "10vw"}} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M 6 12 L 18 12 M 18 12 L 13 7 M 18 12 L 13 17" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
 
-                <img src={vapInGame} alt="Ingame Sight" style={{height: "100%"}}/>
+                <img src={vapInGame} alt="Ingame Sight" style={{width: "40vw", height: "auto"}}/>
             </div>
 
             {/* Step 0: Get a good input image */}
@@ -175,7 +199,7 @@ function App()
                     <img src={vapOrginal} alt="Orginal"/>
 
                     <svg width="100px" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M6 12H18M18 12L13 7M18 12L13 17" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M 6 12 L 18 12 M 18 12 L 13 7 M 18 12 L 13 17" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
 
                     <img src={vapOutline} alt="Ingame Sight"/>
@@ -223,8 +247,8 @@ function App()
                     </div>
 
                     <div className="Overlay-controls">
-                        <div className="Overlay-control-group">
-                            <h3>Break down curves into lines</h3>
+                        <div className="Overlay-control-group" style={{marginBottom: "5vh"}}>
+                            <h3 className="Centered">Break down curves into lines</h3>
 
                             <div className="Overlay-control">
                                 Max Lines:
@@ -238,15 +262,15 @@ function App()
                                 <input style={{width: "69px"}} type="number" id="n-segments-field" placeholder={maxLineSegments} value={nSegments === maxLineSegments ? "" : Math.min(nSegments, maxLineSegments)} name="n-segments" min="1" max={maxLineSegments} step="1" onChange={(e) => {isNaN(e.target.valueAsNumber) ? SetNSegments(maxLineSegments) : SetNSegments(e.target.valueAsNumber)}}/>
                             </div>
 
-                            <div style={{paddingRight: "12px"}}>
+                            {/* <div style={{paddingRight: "12px"}}>
                                 <input type="button" id="process-curves" name="Generate" value="Apply" onClick={() => {ApplyLineBreakdown()}}/>
-                            </div>
+                            </div> */}
                             
                             <p>Total lines: {combinedLines.length} / {warThunderMaxLines}</p>
                         </div>
                         
                         <div className="Overlay-control-group">
-                            <h3>Manipulate the image</h3>
+                            <h3 className="Centered">Manipulate the image</h3>
                             <div className="Overlay-control">
                                 X Position:
                                 <input type="range" id="x-pos-slider" value={xPos} name="X-pos" min="-1" max="1" step="0.01" onChange={(e) => {SetXPos(e.target.valueAsNumber)}}/>
@@ -277,16 +301,13 @@ function App()
                                 <input style={{width: "69px"}} type="number" id="rotation-field" placeholder="0" value={rotation === 0 ? "" : rotation} name="Rotation" min="0" max="360" step="1" onChange={(e) => {isNaN(e.target.valueAsNumber) ? SetRotation(0) : SetRotation(e.target.valueAsNumber)}}/>
                             </div>
 
-                            <div className="Button-holder">
-                                <input type="button" id="reset-manipulate" name="Reset" value="Reset" onClick={() => {
-                                    SetXPos(0);
-                                    SetYPos(0);
-                                    SetXScale(1);
-                                    SetYScale(1);
-                                    SetRotation(0);
-                                }}/>
-                                <input type="button" id="manipulate-apply" name="Generate" value="Apply" onClick={() => {ApplyTransformation()}}/>
-                            </div>
+                            <input type="button" id="reset-manipulate" name="Reset" value="Reset" className="Centered" onClick={() => {
+                                SetXPos(0);
+                                SetYPos(0);
+                                SetXScale(1);
+                                SetYScale(1);
+                                SetRotation(0);
+                            }}/>
                         </div>
                     </div>
                 </div>
